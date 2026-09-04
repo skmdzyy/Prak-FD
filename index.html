@@ -15,7 +15,7 @@
         --primary-hover: #1d4ed8;
         --bg: #f8fafc;
         --card-bg: #ffffff;
-        --border: #e2e8f0;
+        --border: #cbd5e1;
         --text-main: #0f172a;
         --text-muted: #64748b;
       }
@@ -35,7 +35,7 @@
       }
 
       .container {
-        max-width: 1200px;
+        max-width: 1240px;
         margin: 0 auto;
       }
 
@@ -94,7 +94,7 @@
 
       .main-layout {
         display: grid;
-        grid-template-columns: 1.1fr 1.2fr;
+        grid-template-columns: 1.15fr 1.1fr;
         gap: 20px;
       }
 
@@ -133,16 +133,10 @@
         color: #334155;
       }
 
-      .hint {
-        font-size: 0.78rem;
-        color: var(--text-muted);
-        margin-top: 2px;
-      }
-
-      textarea,
-      input[type="text"] {
+      input[type="text"],
+      input[type="number"] {
         width: 100%;
-        padding: 8px 12px;
+        padding: 8px 10px;
         border-radius: 6px;
         border: 1px solid var(--border);
         font-size: 0.9rem;
@@ -150,15 +144,90 @@
         transition: border 0.2s;
       }
 
-      textarea {
-        font-family: "Fira Code", monospace;
-        resize: vertical;
-      }
-
-      textarea:focus,
-      input[type="text"]:focus {
+      input:focus {
         border-color: var(--primary);
         box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+      }
+
+      /* TABEL DINAMIS DENGAN GARIS KOLOM DEFAULT */
+      .data-table-container {
+        margin-bottom: 16px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+      }
+
+      .data-table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f1f5f9;
+        padding: 8px 12px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: #334155;
+        border-bottom: 1px solid var(--border);
+      }
+
+      table.data-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      table.data-table th,
+      table.data-table td {
+        border: 1px solid var(--border);
+        padding: 6px 8px;
+        text-align: center;
+        font-size: 0.88rem;
+      }
+
+      table.data-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+      }
+
+      table.data-table td input {
+        border: 1px solid transparent;
+        text-align: center;
+        font-family: "Fira Code", monospace;
+        padding: 6px 4px;
+        background: transparent;
+      }
+
+      table.data-table td input:focus {
+        border-color: var(--primary);
+        background: #ffffff;
+      }
+
+      .btn-add-row {
+        background: #e0e7ff;
+        color: #3730a3;
+        border: 1px solid #c7d2fe;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .btn-add-row:hover {
+        background: #c7d2fe;
+      }
+
+      .btn-del-row {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+      .btn-del-row:hover {
+        background: #fecaca;
       }
 
       .sub-card {
@@ -251,7 +320,7 @@
     <div class="container">
       <header>
         <h1>ANALISIS DATA PRAKTIKUM RUANG C</h1>
-        <p>Pilih modul praktikum, masukkan data hasil pengamatan, lalu klik tombol hitung.</p>
+        <p>Pilih modul praktikum, masukkan data pada tabel bergaris di bawah, lalu klik tombol hitung.</p>
       </header>
 
       <div class="module-selector">
@@ -288,7 +357,7 @@
 
     <script>
       // ============================================================
-      // UTILITAS MATEMATIKA & PARSING
+      // UTILITAS MATEMATIKA
       // ============================================================
 
       function toFloat(val, name = "Nilai") {
@@ -298,62 +367,6 @@
         let num = parseFloat(str);
         if (isNaN(num)) throw new Error(`${name} mengandung format angka yang tidak valid.`);
         return num;
-      }
-
-      function parseRows(text, ncol, labels = null, required = true) {
-        let lines = text.trim().split(/\r?\n/);
-        let rows = [];
-        let lineNo = 0;
-        for (let raw of lines) {
-          lineNo++;
-          let line = raw.trim();
-          if (!line) continue;
-
-          // Mendukung pemisah garis tegak '|', titik koma ';', tab, koma, atau spasi
-          let norm = line.replace(/\|/g, " ").replace(/;/g, " ").replace(/\t/g, " ");
-          let parts;
-          if (norm.includes(",") && !norm.includes(" ")) {
-            parts = norm
-              .split(",")
-              .map((p) => p.trim())
-              .filter((p) => p.length > 0);
-          } else {
-            parts = norm
-              .replace(/,/g, " ")
-              .split(/\s+/)
-              .filter((p) => p.length > 0);
-          }
-
-          if (parts.length !== ncol) {
-            let nameStr = labels ? ` (${labels.join(" | ")})` : "";
-            throw new Error(`Baris ${lineNo} harus memiliki ${ncol} kolom${nameStr}, tetapi ditemukan ${parts.length} kolom.`);
-          }
-          let row = [];
-          for (let p of parts) {
-            let val = parseFloat(p.replace(/,/g, "."));
-            if (isNaN(val)) throw new Error(`Baris ${lineNo} mengandung data yang bukan angka: "${p}".`);
-            row.push(val);
-          }
-          rows.push(row);
-        }
-        if (rows.length === 0) {
-          if (required) throw new Error("Data belum diisi.");
-          return null;
-        }
-        return rows;
-      }
-
-      function parseVector(text) {
-        let norm = text.replace(/\|/g, " ").replace(/;/g, " ").replace(/\n/g, " ").replace(/\t/g, " ").replace(/,/g, " ");
-        let parts = norm.split(/\s+/).filter((p) => p.length > 0);
-        if (parts.length === 0) throw new Error("Data belum diisi.");
-        let vec = [];
-        for (let p of parts) {
-          let val = parseFloat(p.replace(/,/g, "."));
-          if (isNaN(val)) throw new Error(`Data mengandung nilai yang bukan angka: "${p}".`);
-          vec.push(val);
-        }
-        return vec;
       }
 
       function percentError(exp, lit) {
@@ -385,7 +398,69 @@
       }
 
       // ============================================================
-      // TEMPLATE FORM MODUL
+      // FUNGSI MANAJEMEN TABEL DINAMIS (GARIS DEFAULT)
+      // ============================================================
+
+      function addRow(tbodyId, cols, defaultValues = []) {
+        let tbody = document.getElementById(tbodyId);
+        let rowCount = tbody.rows.length + 1;
+        let tr = document.createElement("tr");
+
+        let html = `<td style="color:#64748b; font-weight:600;">${rowCount}</td>`;
+        for (let i = 0; i < cols; i++) {
+          let val = defaultValues[i] !== undefined ? defaultValues[i] : "";
+          html += `<td><input type="text" placeholder="0.00" value="${val}"></td>`;
+        }
+        html += `<td><button type="button" class="btn-del-row" onclick="deleteRow(this, '${tbodyId}')">✕</button></td>`;
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
+      }
+
+      function deleteRow(btn, tbodyId) {
+        let tr = btn.closest("tr");
+        let tbody = document.getElementById(tbodyId);
+        if (tbody.rows.length <= 1) {
+          // Jangan hapus baris terakhir, kosongkan saja inputnya
+          tr.querySelectorAll("input").forEach((inp) => (inp.value = ""));
+          return;
+        }
+        tr.remove();
+        // Re-index nomor baris
+        Array.from(tbody.rows).forEach((r, idx) => {
+          r.cells[0].innerText = idx + 1;
+        });
+      }
+
+      function getTableData(tbodyId, ncol) {
+        let tbody = document.getElementById(tbodyId);
+        if (!tbody) return null;
+        let rows = [];
+        for (let tr of tbody.rows) {
+          let inputs = tr.querySelectorAll("input");
+          let vals = [];
+          let hasAny = false;
+          for (let inp of inputs) {
+            let v = inp.value.trim().replace(/,/g, ".");
+            if (v !== "") hasAny = true;
+            vals.push(v);
+          }
+          if (hasAny) {
+            // Jika salah satu kolom diisi, semua kolom pada baris tersebut wajib angka
+            let parsedRow = [];
+            for (let v of vals) {
+              if (v === "") throw new Error(`Terdapat sel kosong pada tabel ${tbodyId} baris ${tr.cells[0].innerText}.`);
+              let num = parseFloat(v);
+              if (isNaN(num)) throw new Error(`Terdapat data bukan angka "${v}" pada tabel baris ${tr.cells[0].innerText}.`);
+              parsedRow.push(num);
+            }
+            rows.push(parsedRow);
+          }
+        }
+        return rows.length > 0 ? rows : null;
+      }
+
+      // ============================================================
+      // TEMPLATE HALAMAN
       // ============================================================
 
       let chartInstance = null;
@@ -393,27 +468,48 @@
       function renderO1() {
         return `
         <div class="card-title">Input O1 — Lensa Positif, Negatif & Spherometer</div>
-        <p class="hint" style="margin-bottom: 12px;">Pisahkan kolom data dengan garis tegak ( | ). Bebas isi berapapun baris data.</p>
-        
-        <div class="form-group">
-            <label>Lensa Positif: s | s' (meter)</label>
-            <textarea id="o1_pos" rows="3" placeholder="0.25 | 0.40&#10;0.30 | 0.35"></textarea>
+
+        <!-- TABEL LENSA POSITIF -->
+        <div class="data-table-container">
+            <div class="data-table-header">
+                <span>Tabel Lensa Positif</span>
+                <button type="button" class="btn-add-row" onclick="addRow('o1_pos_body', 2)">+ Tambah Baris</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">No</th>
+                        <th>s (meter)</th>
+                        <th>s' (meter)</th>
+                        <th style="width: 45px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="o1_pos_body"></tbody>
+            </table>
         </div>
 
-        <div class="form-group">
-            <label>Lensa Negatif: s | s' (meter)</label>
-            <textarea id="o1_neg" rows="3" placeholder="0.20 | 0.50"></textarea>
+        <!-- TABEL LENSA NEGATIF -->
+        <div class="data-table-container">
+            <div class="data-table-header">
+                <span>Tabel Lensa Negatif</span>
+                <button type="button" class="btn-add-row" onclick="addRow('o1_neg_body', 2)">+ Tambah Baris</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">No</th>
+                        <th>s (meter)</th>
+                        <th>s' (meter)</th>
+                        <th style="width: 45px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="o1_neg_body"></tbody>
+            </table>
         </div>
 
         <div class="grid-2">
-            <div class="form-group">
-                <label>Δs mistar (m)</label>
-                <input type="text" id="o1_ds" value="0.0005">
-            </div>
-            <div class="form-group">
-                <label>Δs' mistar (m)</label>
-                <input type="text" id="o1_dsp" value="0.0005">
-            </div>
+            <div class="form-group"><label>Δs mistar (m)</label><input type="text" id="o1_ds" value="0.0005"></div>
+            <div class="form-group"><label>Δs' mistar (m)</label><input type="text" id="o1_dsp" value="0.0005"></div>
         </div>
 
         <div class="sub-card">
@@ -452,20 +548,29 @@
       function renderO2() {
         return `
         <div class="card-title">Input O2 — Panjang Gelombang (Kisi Difraksi)</div>
-        <div class="form-group">
-            <label>Data: orde(m) | θkanan(deg) | θkiri(deg)</label>
-            <textarea id="o2_data" rows="6" placeholder="1 | 31.4 | 28.6&#10;2 | 65.1 | 62.2"></textarea>
-            <div class="hint">Pisahkan kolom dengan garis tegak ( | ). Bebas berapapun baris.</div>
+        
+        <div class="data-table-container">
+            <div class="data-table-header">
+                <span>Tabel Pengukuran Orde Difraksi</span>
+                <button type="button" class="btn-add-row" onclick="addRow('o2_body', 3)">+ Tambah Baris</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">No</th>
+                        <th>Orde (m)</th>
+                        <th>θ kanan (°)</th>
+                        <th>θ kiri (°)</th>
+                        <th style="width: 45px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="o2_body"></tbody>
+            </table>
         </div>
+
         <div class="grid-2">
-            <div class="form-group">
-                <label>Jarak kisi d (m)</label>
-                <input type="text" id="o2_d" value="2e-5">
-            </div>
-            <div class="form-group">
-                <label>λ literatur (m)</label>
-                <input type="text" id="o2_lit" value="5.90e-7">
-            </div>
+            <div class="form-group"><label>Jarak kisi d (m)</label><input type="text" id="o2_d" value="2e-5"></div>
+            <div class="form-group"><label>λ literatur (m)</label><input type="text" id="o2_lit" value="5.90e-7"></div>
         </div>
         <button class="btn-calc" onclick="calculateO2()">HITUNG O2</button>
     `;
@@ -474,16 +579,43 @@
       function renderO3() {
         return `
         <div class="card-title">Input O3 — Indeks Bias Prisma</div>
-        <div class="form-group">
-            <label>Sudut Puncak: θ1 | θ2 (deg)</label>
-            <textarea id="o3_A" rows="3" placeholder="120.5 | 0.5"></textarea>
-            <div class="hint">Pisahkan kolom dengan garis tegak ( | ). Bebas berapapun baris.</div>
+        
+        <div class="data-table-container">
+            <div class="data-table-header">
+                <span>Tabel Sudut Puncak (A)</span>
+                <button type="button" class="btn-add-row" onclick="addRow('o3_A_body', 2)">+ Tambah Baris</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">No</th>
+                        <th>θ1 (°)</th>
+                        <th>θ2 (°)</th>
+                        <th style="width: 45px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="o3_A_body"></tbody>
+            </table>
         </div>
-        <div class="form-group">
-            <label>Deviasi Minimum: θ1 | θ2 (deg)</label>
-            <textarea id="o3_D" rows="3" placeholder="80.2 | 2.2"></textarea>
-            <div class="hint">Pisahkan kolom dengan garis tegak ( | ). Bebas berapapun baris.</div>
+
+        <div class="data-table-container">
+            <div class="data-table-header">
+                <span>Tabel Deviasi Minimum (Dm)</span>
+                <button type="button" class="btn-add-row" onclick="addRow('o3_D_body', 2)">+ Tambah Baris</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">No</th>
+                        <th>θ1 (°)</th>
+                        <th>θ2 (°)</th>
+                        <th style="width: 45px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="o3_D_body"></tbody>
+            </table>
         </div>
+
         <div class="grid-2">
             <div class="form-group"><label>Δθ1 (deg)</label><input type="text" id="o3_dth1" value="0"></div>
             <div class="form-group"><label>Δθ2 (deg)</label><input type="text" id="o3_dth2" value="0"></div>
@@ -496,13 +628,27 @@
       function renderO5() {
         return `
         <div class="card-title">Input O5 — Pengukuran Kecepatan Cahaya</div>
-        <div class="form-group">
-            <label>Data Udara: Δt | Δs (m)</label>
-            <textarea id="o5_air" rows="5" placeholder="3.34 | 1.0&#10;6.67 | 2.0&#10;10.0 | 3.0"></textarea>
-            <div class="hint">Pisahkan kolom dengan garis tegak ( | ). Minimal 2 data untuk regresi linear.</div>
+        
+        <div class="data-table-container">
+            <div class="data-table-header">
+                <span>Tabel Pengukuran di Udara (Minimal 2 Baris)</span>
+                <button type="button" class="btn-add-row" onclick="addRow('o5_air_body', 2)">+ Tambah Baris</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">No</th>
+                        <th>Δt</th>
+                        <th>Δs (meter)</th>
+                        <th style="width: 45px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="o5_air_body"></tbody>
+            </table>
         </div>
+
         <div class="form-group">
-            <label>Satuan Δt</label>
+            <label>Satuan Waktu Δt</label>
             <select id="o5_unit">
                 <option value="ns" selected>ns (nanodetik)</option>
                 <option value="µs">µs (mikrodetik)</option>
@@ -520,17 +666,34 @@
             <div class="form-group"><label>v akrilik</label><input type="text" id="o5_v_acr_lit" value="2.01e8"></div>
         </div>
 
+        <!-- TABEL MEDIUM AIR -->
         <div class="sub-card">
-            <div class="sub-card-title">Medium Air & Akrilik (Opsional)</div>
-            <div class="form-group">
-                <label>Δx medium air (m)</label>
-                <textarea id="o5_water_dx" rows="2" placeholder="Contoh: 0.05 | 0.052 | 0.048 (atau pisah spasi/enter)"></textarea>
+            <div class="sub-card-title">Medium Air (Opsional)</div>
+            <div class="data-table-container" style="margin-bottom: 8px;">
+                <div class="data-table-header">
+                    <span>Data Δx Air</span>
+                    <button type="button" class="btn-add-row" onclick="addRow('o5_water_body', 1)">+ Tambah Data</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th style="width:40px;">No</th><th>Δx (meter)</th><th style="width:45px;">Aksi</th></tr></thead>
+                    <tbody id="o5_water_body"></tbody>
+                </table>
             </div>
             <div class="form-group"><label>Panjang tabung air lm (m)</label><input type="text" id="o5_water_lm" placeholder="opsional"></div>
-            
-            <div class="form-group">
-                <label>Δx akrilik (m)</label>
-                <textarea id="o5_acr_dx" rows="2" placeholder="Contoh: 0.04 | 0.041 | 0.039 (atau pisah spasi/enter)"></textarea>
+        </div>
+
+        <!-- TABEL MEDIUM AKRILIK -->
+        <div class="sub-card">
+            <div class="sub-card-title">Medium Akrilik (Opsional)</div>
+            <div class="data-table-container" style="margin-bottom: 8px;">
+                <div class="data-table-header">
+                    <span>Data Δx Akrilik</span>
+                    <button type="button" class="btn-add-row" onclick="addRow('o5_acr_body', 1)">+ Tambah Data</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th style="width:40px;">No</th><th>Δx (meter)</th><th style="width:45px;">Aksi</th></tr></thead>
+                    <tbody id="o5_acr_body"></tbody>
+                </table>
             </div>
             <div class="form-group"><label>Panjang akrilik lm (m)</label><input type="text" id="o5_acr_lm" placeholder="opsional"></div>
         </div>
@@ -544,10 +707,30 @@
         let container = document.getElementById("formContainer");
         let chartWrapper = document.getElementById("chartWrapper");
 
-        if (mod === "O1") container.innerHTML = renderO1();
-        else if (mod === "O2") container.innerHTML = renderO2();
-        else if (mod === "O3") container.innerHTML = renderO3();
-        else if (mod === "O5") container.innerHTML = renderO5();
+        if (mod === "O1") {
+          container.innerHTML = renderO1();
+          // Berikan baris default
+          addRow("o1_pos_body", 2, ["0.25", "0.40"]);
+          addRow("o1_pos_body", 2, ["0.30", "0.35"]);
+          addRow("o1_neg_body", 2, ["0.20", "0.50"]);
+        } else if (mod === "O2") {
+          container.innerHTML = renderO2();
+          addRow("o2_body", 3, ["1", "31.4", "28.6"]);
+          addRow("o2_body", 3, ["2", "65.1", "62.2"]);
+        } else if (mod === "O3") {
+          container.innerHTML = renderO3();
+          addRow("o3_A_body", 2, ["120.5", "0.5"]);
+          addRow("o3_D_body", 2, ["80.2", "2.2"]);
+        } else if (mod === "O5") {
+          container.innerHTML = renderO5();
+          addRow("o5_air_body", 2, ["3.34", "1.0"]);
+          addRow("o5_air_body", 2, ["6.67", "2.0"]);
+          addRow("o5_air_body", 2, ["10.0", "3.0"]);
+          addRow("o5_water_body", 1, ["0.050"]);
+          addRow("o5_water_body", 1, ["0.052"]);
+          addRow("o5_acr_body", 1, ["0.040"]);
+          addRow("o5_acr_body", 1, ["0.041"]);
+        }
 
         if (mod !== "O5") {
           chartWrapper.style.display = "none";
@@ -560,13 +743,13 @@
       }
 
       // ============================================================
-      // LOGIKA KALKULASI
+      // KALKULASI PROGRAM
       // ============================================================
 
       function calculateO1() {
         try {
-          let pos = parseRows(document.getElementById("o1_pos").value, 2, ["s", "s'"], false);
-          let neg = parseRows(document.getElementById("o1_neg").value, 2, ["s", "s'"], false);
+          let pos = getTableData("o1_pos_body", 2);
+          let neg = getTableData("o1_neg_body", 2);
           let ds = toFloat(document.getElementById("o1_ds").value, "Δs");
           let dsp = toFloat(document.getElementById("o1_dsp").value, "Δs'");
 
@@ -624,7 +807,7 @@
           let sph_neg = calcSphero("Lensa Negatif", document.getElementById("o1_h1_neg").value, document.getElementById("o1_h2_neg").value, document.getElementById("o1_y_neg").value, document.getElementById("o1_t_neg").value);
 
           if (!pos && !neg && sph_pos.length === 0 && sph_neg.length === 0) {
-            throw new Error("Silakan isi setidaknya satu data (lensa positif, lensa negatif, atau spherometer).");
+            throw new Error("Silakan isi setidaknya satu baris data (lensa positif, lensa negatif, atau spherometer).");
           }
 
           let lines = ["O1 — LENSA POSITIF DAN NEGATIF", "=".repeat(52)];
@@ -664,7 +847,9 @@
 
       function calculateO2() {
         try {
-          let data = parseRows(document.getElementById("o2_data").value, 3, ["m", "θkanan", "θkiri"], true);
+          let data = getTableData("o2_body", 3);
+          if (!data || data.length === 0) throw new Error("Tabel data orde belum diisi.");
+
           let d_val = toFloat(document.getElementById("o2_d").value, "Jarak kisi d");
           let lit = toFloat(document.getElementById("o2_lit").value, "λ literatur");
 
@@ -708,8 +893,9 @@
 
       function calculateO3() {
         try {
-          let ad = parseRows(document.getElementById("o3_A").value, 2, ["θ1", "θ2"], true);
-          let dd = parseRows(document.getElementById("o3_D").value, 2, ["θ1", "θ2"], true);
+          let ad = getTableData("o3_A_body", 2);
+          let dd = getTableData("o3_D_body", 2);
+          if (!ad || !dd) throw new Error("Tabel Sudut Puncak (A) dan Deviasi Minimum (Dm) wajib diisi.");
 
           let dth1 = toFloat(document.getElementById("o3_dth1").value, "Δθ1");
           let dth2 = toFloat(document.getElementById("o3_dth2").value, "Δθ2");
@@ -763,8 +949,8 @@
 
       function calculateO5() {
         try {
-          let data = parseRows(document.getElementById("o5_air").value, 2, ["Δt", "Δs"], true);
-          if (data.length < 2) throw new Error("Regresi linear memerlukan minimal 2 pasangan data.");
+          let data = getTableData("o5_air_body", 2);
+          if (!data || data.length < 2) throw new Error("Tabel pengukuran di udara memerlukan minimal 2 baris data.");
 
           let unit = document.getElementById("o5_unit").value;
           let factors = { s: 1.0, ms: 1e-3, µs: 1e-6, ns: 1e-9 };
@@ -821,9 +1007,10 @@
             `Persentase keberhasilan udara = ${suc_air.toFixed(4)}%`,
           ];
 
-          function mediumAnalysis(label, dx_text, lm_val, v_lit) {
-            if (!dx_text.trim() || !lm_val.trim()) return [];
-            let dx = parseVector(dx_text);
+          function mediumAnalysis(label, tableId, lm_val, v_lit) {
+            let rawData = getTableData(tableId, 1);
+            if (!rawData || rawData.length === 0 || !lm_val.trim()) return [];
+            let dx = rawData.map((r) => r[0]);
             let lm = toFloat(lm_val, `lm ${label}`);
             if (Math.abs(lm) < 1e-12) throw new Error(`lm ${label} tidak boleh nol.`);
 
@@ -847,8 +1034,8 @@
             ];
           }
 
-          lines = lines.concat(mediumAnalysis("Air", document.getElementById("o5_water_dx").value, document.getElementById("o5_water_lm").value, v_water_lit));
-          lines = lines.concat(mediumAnalysis("Akrilik", document.getElementById("o5_acr_dx").value, document.getElementById("o5_acr_lm").value, v_acr_lit));
+          lines = lines.concat(mediumAnalysis("Air", "o5_water_body", document.getElementById("o5_water_lm").value, v_water_lit));
+          lines = lines.concat(mediumAnalysis("Akrilik", "o5_acr_body", document.getElementById("o5_acr_lm").value, v_acr_lit));
 
           document.getElementById("resultBox").innerText = lines.join("\n");
 
