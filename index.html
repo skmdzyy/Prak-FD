@@ -308,7 +308,9 @@
           lineNo++;
           let line = raw.trim();
           if (!line) continue;
-          let norm = line.replace(/;/g, " ").replace(/\t/g, " ");
+
+          // Mendukung pemisah garis tegak '|', titik koma ';', tab, koma, atau spasi
+          let norm = line.replace(/\|/g, " ").replace(/;/g, " ").replace(/\t/g, " ");
           let parts;
           if (norm.includes(",") && !norm.includes(" ")) {
             parts = norm
@@ -321,8 +323,9 @@
               .split(/\s+/)
               .filter((p) => p.length > 0);
           }
+
           if (parts.length !== ncol) {
-            let nameStr = labels ? ` (${labels.join(", ")})` : "";
+            let nameStr = labels ? ` (${labels.join(" | ")})` : "";
             throw new Error(`Baris ${lineNo} harus memiliki ${ncol} kolom${nameStr}, tetapi ditemukan ${parts.length} kolom.`);
           }
           let row = [];
@@ -341,12 +344,12 @@
       }
 
       function parseVector(text) {
-        let norm = text.replace(/;/g, " ").replace(/\n/g, " ").replace(/\t/g, " ").replace(/,/g, " ");
+        let norm = text.replace(/\|/g, " ").replace(/;/g, " ").replace(/\n/g, " ").replace(/\t/g, " ").replace(/,/g, " ");
         let parts = norm.split(/\s+/).filter((p) => p.length > 0);
         if (parts.length === 0) throw new Error("Data belum diisi.");
         let vec = [];
         for (let p of parts) {
-          let val = parseFloat(p);
+          let val = parseFloat(p.replace(/,/g, "."));
           if (isNaN(val)) throw new Error(`Data mengandung nilai yang bukan angka: "${p}".`);
           vec.push(val);
         }
@@ -390,16 +393,16 @@
       function renderO1() {
         return `
         <div class="card-title">Input O1 — Lensa Positif, Negatif & Spherometer</div>
-        <p class="hint" style="margin-bottom: 12px;">Data s dan s' dalam meter. Bebas mengisi berapapun baris data.</p>
+        <p class="hint" style="margin-bottom: 12px;">Pisahkan kolom data dengan garis tegak ( | ). Bebas isi berapapun baris data.</p>
         
         <div class="form-group">
-            <label>Lensa Positif: s   s' (opsional / bebas baris)</label>
-            <textarea id="o1_pos" rows="3" placeholder="0.25  0.40&#10;0.30  0.35"></textarea>
+            <label>Lensa Positif: s | s' (meter)</label>
+            <textarea id="o1_pos" rows="3" placeholder="0.25 | 0.40&#10;0.30 | 0.35"></textarea>
         </div>
 
         <div class="form-group">
-            <label>Lensa Negatif: s   s' (opsional / bebas baris)</label>
-            <textarea id="o1_neg" rows="3" placeholder="0.20  0.50"></textarea>
+            <label>Lensa Negatif: s | s' (meter)</label>
+            <textarea id="o1_neg" rows="3" placeholder="0.20 | 0.50"></textarea>
         </div>
 
         <div class="grid-2">
@@ -450,9 +453,9 @@
         return `
         <div class="card-title">Input O2 — Panjang Gelombang (Kisi Difraksi)</div>
         <div class="form-group">
-            <label>Data: orde(m)   θkanan(deg)   θkiri(deg)</label>
-            <textarea id="o2_data" rows="6" placeholder="1  31.4  28.6&#10;2  65.1  62.2"></textarea>
-            <div class="hint">Satu baris satu orde. Bebas berapapun baris.</div>
+            <label>Data: orde(m) | θkanan(deg) | θkiri(deg)</label>
+            <textarea id="o2_data" rows="6" placeholder="1 | 31.4 | 28.6&#10;2 | 65.1 | 62.2"></textarea>
+            <div class="hint">Pisahkan kolom dengan garis tegak ( | ). Bebas berapapun baris.</div>
         </div>
         <div class="grid-2">
             <div class="form-group">
@@ -472,14 +475,14 @@
         return `
         <div class="card-title">Input O3 — Indeks Bias Prisma</div>
         <div class="form-group">
-            <label>Sudut Puncak: θ1   θ2 (deg)</label>
-            <textarea id="o3_A" rows="3" placeholder="Contoh: 120.5  0.5"></textarea>
-            <div class="hint">Bebas satu atau beberapa baris.</div>
+            <label>Sudut Puncak: θ1 | θ2 (deg)</label>
+            <textarea id="o3_A" rows="3" placeholder="120.5 | 0.5"></textarea>
+            <div class="hint">Pisahkan kolom dengan garis tegak ( | ). Bebas berapapun baris.</div>
         </div>
         <div class="form-group">
-            <label>Deviasi Minimum: θ1   θ2 (deg)</label>
-            <textarea id="o3_D" rows="3" placeholder="Contoh: 80.2  2.2"></textarea>
-            <div class="hint">Bebas satu atau beberapa baris.</div>
+            <label>Deviasi Minimum: θ1 | θ2 (deg)</label>
+            <textarea id="o3_D" rows="3" placeholder="80.2 | 2.2"></textarea>
+            <div class="hint">Pisahkan kolom dengan garis tegak ( | ). Bebas berapapun baris.</div>
         </div>
         <div class="grid-2">
             <div class="form-group"><label>Δθ1 (deg)</label><input type="text" id="o3_dth1" value="0"></div>
@@ -494,9 +497,9 @@
         return `
         <div class="card-title">Input O5 — Pengukuran Kecepatan Cahaya</div>
         <div class="form-group">
-            <label>Data Udara: Δt   Δs(m)</label>
-            <textarea id="o5_air" rows="5" placeholder="3.34  1.0&#10;6.67  2.0&#10;10.0  3.0"></textarea>
-            <div class="hint">Satu baris satu pengukuran. Minimal 2 data untuk regresi linear.</div>
+            <label>Data Udara: Δt | Δs (m)</label>
+            <textarea id="o5_air" rows="5" placeholder="3.34 | 1.0&#10;6.67 | 2.0&#10;10.0 | 3.0"></textarea>
+            <div class="hint">Pisahkan kolom dengan garis tegak ( | ). Minimal 2 data untuk regresi linear.</div>
         </div>
         <div class="form-group">
             <label>Satuan Δt</label>
@@ -521,13 +524,13 @@
             <div class="sub-card-title">Medium Air & Akrilik (Opsional)</div>
             <div class="form-group">
                 <label>Δx medium air (m)</label>
-                <textarea id="o5_water_dx" rows="2" placeholder="Masukkan deretan data Δx dipisah spasi/enter"></textarea>
+                <textarea id="o5_water_dx" rows="2" placeholder="Contoh: 0.05 | 0.052 | 0.048 (atau pisah spasi/enter)"></textarea>
             </div>
             <div class="form-group"><label>Panjang tabung air lm (m)</label><input type="text" id="o5_water_lm" placeholder="opsional"></div>
             
             <div class="form-group">
                 <label>Δx akrilik (m)</label>
-                <textarea id="o5_acr_dx" rows="2" placeholder="Masukkan deretan data Δx dipisah spasi/enter"></textarea>
+                <textarea id="o5_acr_dx" rows="2" placeholder="Contoh: 0.04 | 0.041 | 0.039 (atau pisah spasi/enter)"></textarea>
             </div>
             <div class="form-group"><label>Panjang akrilik lm (m)</label><input type="text" id="o5_acr_lm" placeholder="opsional"></div>
         </div>
@@ -807,7 +810,7 @@
           let lines = [
             `O5 — PENGUKURAN KECEPATAN CAHAYA (N = ${N} data)`,
             "=".repeat(58),
-            `Persamaan regresi (SI): Δs = (${fmt(m)}) Δt + (${fmt(b)})`,
+            `Persamaan regresi (SI): Δs = (${fmt(m)}) Δt + ({fmt(b)})`,
             `c = m = ${fmt(m)} m/s`,
             `Intersep    = ${fmt(b)} m`,
             `Sy          = ${fmt(Sy)} m`,
@@ -849,7 +852,6 @@
 
           document.getElementById("resultBox").innerText = lines.join("\n");
 
-          // Tampilkan Grafik
           renderChart(x_disp, y, m * factor, b, unit, r2);
         } catch (err) {
           alert("Error: " + err.message);
